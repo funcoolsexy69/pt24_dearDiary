@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="mul">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission Diary</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #ff75fa;
+            color: #2d002d;
+            min-height: 100vh;
+        }
+        h1 { 
+            text-align: center; 
+            color: #fff;
+            background: rgba(255,117,250,0.2);
+            padding: 20px;
+            border-radius: 12px;
+            text-shadow: none;
+            margin-bottom: 10px;
+        }
+        form {
+            background: rgba(255,255,255,0.85);
+            padding: 25px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border: 2px solid #ff75fa;
+        }
+        label { 
+            display: block; 
+            margin: 18px 0 8px; 
+            font-weight: bold; 
+            color: #5e005e;
+        }
+        input[type="date"], textarea {
+            width: 100%;
+            padding: 12px;
+            background: #fff;
+            border: 2px solid #ff75fa88;
+            border-radius: 8px;
+            color: #000;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        textarea { height: 110px; resize: vertical; }
+        button {
+            background: #ff75fa;
+            color: #000;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: 0 6px 20px rgba(255,117,250,0.4);
+            transition: all 0.2s;
+        }
+        button:hover { 
+            background: #ff4fe8; 
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(255,117,250,0.6);
+        }
+        .entry {
+            background: rgba(255,255,255,0.9);
+            padding: 25px;
+            border-radius: 16px;
+            margin-bottom: 25px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+            border-left: 8px solid #ff75fa;
+        }
+        .entry h2 { 
+            margin: 0 0 20px; 
+            color: #ff75fa; 
+            font-size: 24px;
+        }
+        .entry h3 { 
+            margin: 22px 0 10px; 
+            color: #5e005e; 
+            font-weight: bold;
+        }
+        .entry p { 
+            margin: 0; 
+            white-space: pre-wrap; 
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <h1>핑크 미션 다이어리</h1>
+    <p style="text-align:center; color:#5e005e; margin-bottom:30px; font-size:18px;">
+        임무 → 장애물 → 해결 → 다음단계<br>
+        미션 실행 모드 온
+    </p>
+
+    <form id="diaryForm">
+        <label>날짜 <input type="date" id="date" required></label>
+        <label>임무 <textarea id="mission" required placeholder="오늘의 핵심 미션은? Mars급 목표 써"></textarea></label>
+        <label>장애물 <textarea id="obstacles" placeholder="무엇이 막고 있는가? 솔직히 적어"></textarea></label>
+        <label>해결방법 <textarea id="solutions" placeholder="어떻게 뚫을 것인가? first-principles로"></textarea></label>
+        <label>다음단계 <textarea id="nextsteps" required placeholder="구체적 액션 1~3개. 바로 실행할 거"></textarea></label>
+        <button type="submit">기록 추가</button>
+    </form>
+
+    <div id="entries"></div>
+
+    <script>
+        const form = document.getElementById('diaryForm');
+        const entriesDiv = document.getElementById('entries');
+
+        document.getElementById('date').valueAsDate = new Date();
+
+        function loadEntries() {
+            const entries = JSON.parse(localStorage.getItem('missionDiary') || '[]');
+            entriesDiv.innerHTML = '';
+            entries.reverse().forEach(entry => {
+                const div = document.createElement('div');
+                div.className = 'entry';
+                div.innerHTML = `
+                    <h2>${entry.date || '날짜 없음'}</h2>
+                    <h3>임무</h3><p>${entry.mission || '-'}</p>
+                    <h3>장애물</h3><p>${entry.obstacles || '-'}</p>
+                    <h3>해결방법</h3><p>${entry.solutions || '-'}</p>
+                    <h3>다음단계</h3><p>${entry.nextsteps || '-'}</p>
+                `;
+                entriesDiv.appendChild(div);
+            });
+        }
+
+        form.addEventListener('submit', e => {
+            e.preventDefault();
+            const entry = {
+                date: document.getElementById('date').value,
+                mission: document.getElementById('mission').value.trim(),
+                obstacles: document.getElementById('obstacles').value.trim(),
+                solutions: document.getElementById('solutions').value.trim(),
+                nextsteps: document.getElementById('nextsteps').value.trim()
+            };
+            const entries = JSON.parse(localStorage.getItem('missionDiary') || '[]');
+            entries.push(entry);
+            localStorage.setItem('missionDiary', JSON.stringify(entries));
+            loadEntries();
+            form.reset();
+            document.getElementById('date').valueAsDate = new Date();
+        });
+
+        loadEntries();
+    </script>
+</body>
+</html>
