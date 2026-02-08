@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mission Diary</title>
+    <title>미션 다이어리</title>
     <style>
         body {
             font-family: Arial, Helvetica, sans-serif;
@@ -20,7 +20,6 @@
             background: rgba(255,117,250,0.2);
             padding: 20px;
             border-radius: 12px;
-            text-shadow: none;
             margin-bottom: 10px;
         }
         form {
@@ -73,6 +72,7 @@
             margin-bottom: 25px;
             box-shadow: 0 6px 20px rgba(0,0,0,0.08);
             border-left: 8px solid #ff75fa;
+            position: relative;
         }
         .entry h2 { 
             margin: 0 0 20px; 
@@ -89,22 +89,39 @@
             white-space: pre-wrap; 
             line-height: 1.6;
         }
+        .actions {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+        .actions button {
+            padding: 8px 16px;
+            font-size: 14px;
+            margin-left: 8px;
+        }
+        .delete-btn {
+            background: #ff4d4d;
+        }
+        .delete-btn:hover {
+            background: #ff1a1a;
+        }
     </style>
 </head>
 <body>
-    <h1>핑크 미션 다이어리</h1>
+    <h1>미션 다이어리</h1>
     <p style="text-align:center; color:#5e005e; margin-bottom:30px; font-size:18px;">
         임무 → 장애물 → 해결 → 다음단계<br>
-        미션 실행 모드 온
+        지금 바로 행동해
     </p>
 
     <form id="diaryForm">
+        <input type="hidden" id="editIndex" value="-1">
         <label>날짜 <input type="date" id="date" required></label>
         <label>임무 <textarea id="mission" required placeholder="오늘의 핵심 미션은? Mars급 목표 써"></textarea></label>
         <label>장애물 <textarea id="obstacles" placeholder="무엇이 막고 있는가? 솔직히 적어"></textarea></label>
         <label>해결방법 <textarea id="solutions" placeholder="어떻게 뚫을 것인가? first-principles로"></textarea></label>
         <label>다음단계 <textarea id="nextsteps" required placeholder="구체적 액션 1~3개. 바로 실행할 거"></textarea></label>
-        <button type="submit">기록 추가</button>
+        <button type="submit" id="submitBtn">기록 추가</button>
     </form>
 
     <div id="entries"></div>
@@ -112,16 +129,21 @@
     <script>
         const form = document.getElementById('diaryForm');
         const entriesDiv = document.getElementById('entries');
-
-        document.getElementById('date').valueAsDate = new Date();
+        const submitBtn = document.getElementById('submitBtn');
+        const editIndexInput = document.getElementById('editIndex');
 
         function loadEntries() {
             const entries = JSON.parse(localStorage.getItem('missionDiary') || '[]');
             entriesDiv.innerHTML = '';
-            entries.reverse().forEach(entry => {
+            entries.reverse().forEach((entry, reverseIndex) => {
+                const actualIndex = entries.length - 1 - reverseIndex;
                 const div = document.createElement('div');
                 div.className = 'entry';
                 div.innerHTML = `
+                    <div class="actions">
+                        <button onclick="editEntry(${actualIndex})">Edit</button>
+                        <button class="delete-btn" onclick="deleteEntry(${actualIndex})">Delete</button>
+                    </div>
                     <h2>${entry.date || '날짜 없음'}</h2>
                     <h3>임무</h3><p>${entry.mission || '-'}</p>
                     <h3>장애물</h3><p>${entry.obstacles || '-'}</p>
@@ -132,8 +154,31 @@
             });
         }
 
+        window.editEntry = function(index) {
+            const entries = JSON.parse(localStorage.getItem('missionDiary') || '[]');
+            const entry = entries[index];
+            document.getElementById('date').value = entry.date;
+            document.getElementById('mission').value = entry.mission;
+            document.getElementById('obstacles').value = entry.obstacles;
+            document.getElementById('solutions').value = entry.solutions;
+            document.getElementById('nextsteps').value = entry.nextsteps;
+            editIndexInput.value = index;
+            submitBtn.textContent = '업데이트';
+            window.scrollTo(0, 0);
+        };
+
+        window.deleteEntry = function(index) {
+            if (confirm('정말 삭제할건가?')) {
+                const entries = JSON.parse(localStorage.getItem('missionDiary') || '[]');
+                entries.splice(index, 1);
+                localStorage.setItem('missionDiary', JSON.stringify(entries));
+                loadEntries();
+            }
+        };
+
         form.addEventListener('submit', e => {
             e.preventDefault();
+            const entries = JSON.parse(localStorage.getItem('missionDiary') || '[]');
             const entry = {
                 date: document.getElementById('date').value,
                 mission: document.getElementById('mission').value.trim(),
@@ -141,12 +186,20 @@
                 solutions: document.getElementById('solutions').value.trim(),
                 nextsteps: document.getElementById('nextsteps').value.trim()
             };
-            const entries = JSON.parse(localStorage.getItem('missionDiary') || '[]');
-            entries.push(entry);
+
+            const editIndex = parseInt(editIndexInput.value);
+            if (editIndex === -1) {
+                entries.push(entry);
+            } else {
+                entries[editIndex] = entry;
+            }
+
             localStorage.setItem('missionDiary', JSON.stringify(entries));
             loadEntries();
             form.reset();
             document.getElementById('date').valueAsDate = new Date();
+            editIndexInput.value = -1;
+            submitBtn.textContent = '기록 추가';
         });
 
         loadEntries();
