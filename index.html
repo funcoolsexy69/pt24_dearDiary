@@ -14,8 +14,8 @@
             color: #2d002d;
             min-height: 100vh;
         }
-        h1 { 
-            text-align: center; 
+        h1 {
+            text-align: center;
             color: #fff;
             background: rgba(255,117,250,0.2);
             padding: 20px;
@@ -30,10 +30,10 @@
             box-shadow: 0 8px 25px rgba(0,0,0,0.1);
             border: 2px solid #ff75fa;
         }
-        label { 
-            display: block; 
-            margin: 18px 0 8px; 
-            font-weight: bold; 
+        label {
+            display: block;
+            margin: 18px 0 8px;
+            font-weight: bold;
             color: #5e005e;
         }
         input[type="date"], textarea {
@@ -60,8 +60,8 @@
             box-shadow: 0 6px 20px rgba(255,117,250,0.4);
             transition: all 0.2s;
         }
-        button:hover { 
-            background: #ff4fe8; 
+        button:hover {
+            background: #ff4fe8;
             transform: translateY(-3px);
             box-shadow: 0 10px 30px rgba(255,117,250,0.6);
         }
@@ -74,19 +74,19 @@
             border-left: 8px solid #ff75fa;
             position: relative;
         }
-        .entry h2 { 
-            margin: 0 0 20px; 
-            color: #ff75fa; 
+        .entry h2 {
+            margin: 0 0 20px;
+            color: #ff75fa;
             font-size: 24px;
         }
-        .entry h3 { 
-            margin: 22px 0 10px; 
-            color: #5e005e; 
+        .entry h3 {
+            margin: 22px 0 10px;
+            color: #5e005e;
             font-weight: bold;
         }
-        .entry p { 
-            margin: 0; 
-            white-space: pre-wrap; 
+        .entry p {
+            margin: 0;
+            white-space: pre-wrap;
             line-height: 1.6;
         }
         .actions {
@@ -105,6 +105,10 @@
         .delete-btn:hover {
             background: #ff1a1a;
         }
+        .deadline {
+            color: #ff4fe8;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -113,19 +117,17 @@
         임무 → 장애물 → 해결 → 다음단계<br>
         지금 바로 행동해
     </p>
-
     <form id="diaryForm">
         <input type="hidden" id="editIndex" value="-1">
         <label>날짜 <input type="date" id="date" required></label>
-        <label>임무/마감일 <textarea id="mission" required placeholder="오늘의 핵심 미션은? Mars급 목표 써"></textarea></label>
+        <label>마감일 <input type="date" id="deadline" required></label>
+        <label>임무 <textarea id="mission" required placeholder="오늘의 핵심 미션은? Mars급 목표 써"></textarea></label>
         <label>장애물 <textarea id="obstacles" placeholder="무엇이 막고 있는가? 솔직히 적어"></textarea></label>
         <label>해결방법 <textarea id="solutions" placeholder="어떻게 뚫을 것인가? first-principles로"></textarea></label>
         <label>다음단계 <textarea id="nextsteps" required placeholder="구체적 액션 1~3개. 바로 실행할 거"></textarea></label>
         <button type="submit" id="submitBtn">기록 추가</button>
     </form>
-
     <div id="entries"></div>
-
     <script>
         const form = document.getElementById('diaryForm');
         const entriesDiv = document.getElementById('entries');
@@ -145,6 +147,7 @@
                         <button class="delete-btn" onclick="deleteEntry(${actualIndex})">Delete</button>
                     </div>
                     <h2>${entry.date || '날짜 없음'}</h2>
+                    <h3>마감일</h3><p class="deadline">${entry.deadline || '-'}</p>
                     <h3>임무</h3><p>${entry.mission || '-'}</p>
                     <h3>장애물</h3><p>${entry.obstacles || '-'}</p>
                     <h3>해결방법</h3><p>${entry.solutions || '-'}</p>
@@ -158,6 +161,7 @@
             const entries = JSON.parse(localStorage.getItem('missionDiary') || '[]');
             const entry = entries[index];
             document.getElementById('date').value = entry.date;
+            document.getElementById('deadline').value = entry.deadline || '';
             document.getElementById('mission').value = entry.mission;
             document.getElementById('obstacles').value = entry.obstacles;
             document.getElementById('solutions').value = entry.solutions;
@@ -181,19 +185,18 @@
             const entries = JSON.parse(localStorage.getItem('missionDiary') || '[]');
             const entry = {
                 date: document.getElementById('date').value,
+                deadline: document.getElementById('deadline').value,
                 mission: document.getElementById('mission').value.trim(),
                 obstacles: document.getElementById('obstacles').value.trim(),
                 solutions: document.getElementById('solutions').value.trim(),
                 nextsteps: document.getElementById('nextsteps').value.trim()
             };
-
             const editIndex = parseInt(editIndexInput.value);
             if (editIndex === -1) {
                 entries.push(entry);
             } else {
                 entries[editIndex] = entry;
             }
-
             localStorage.setItem('missionDiary', JSON.stringify(entries));
             loadEntries();
             form.reset();
@@ -202,6 +205,8 @@
             submitBtn.textContent = '기록 추가';
         });
 
+        // 초기 로드 시 오늘 날짜 자동 설정
+        document.getElementById('date').valueAsDate = new Date();
         loadEntries();
     </script>
 </body>
